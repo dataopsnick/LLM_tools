@@ -14,7 +14,7 @@ The core system resides within the `Anthropic/MCP_Sandbox` directory and consist
 The goal is to enable the Orchestrator to manage complex software development workflows (e.g., code migration, debugging, deployment, API integration) safely and effectively by leveraging the specialized tools provided by the MCP Server.
 
 ## Project Structure Highlights
-
+```
 LLM_tools/
 ├── Anthropic/
 │   ├── MCP_Sandbox/             # <-- Primary working directory
@@ -37,7 +37,7 @@ LLM_tools/
 ├── requirements.txt             # Python dependencies for the project
 ├── README.md                    # This file
 └── ...
-
+```
 
 ## Prerequisites
 
