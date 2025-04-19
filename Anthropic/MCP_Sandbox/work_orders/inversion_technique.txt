@@ -1,0 +1,94 @@
+Okay, here is the definition for the `inversion_technique` tool.
+
+**Conceptual Function Definition:**
+
+This function takes an original goal or assumption and reframes it as a prompt to explore the opposite scenario, aiming to uncover hidden obstacles or insights.
+
+```python
+import re
+
+def inversion_technique(original_goal_or_assumption: str) -> str:
+  """
+  Transforms an original goal or assumption into a prompt instructing an LLM
+  to use the Inversion Technique for problem-solving.
+
+  Args:
+    original_goal_or_assumption: The desired outcome or the assumption 
+                                 to be challenged (e.g., "increasing gym memberships", 
+                                 "making our software easier to use", 
+                                 "achieving project success").
+
+  Returns:
+    A formatted prompt instructing an LLM to explore the inverted scenario.
+  """
+
+  # 1. Clean and normalize the input goal/assumption
+  processed_goal = original_goal_or_assumption.strip()
+  # Remove potential leading phrases like "How to", "Achieve", "Goal:", etc.
+  processed_goal = re.sub(r'^(How to|Achieve|Goal:|Objective:)\s+', '', processed_goal, flags=re.IGNORECASE)
+  # Ensure it reads like a concise statement of the goal
+  processed_goal = processed_goal[0].lower() + processed_goal[1:] # Start lowercase for insertion into sentence
+  # Remove trailing punctuation if any, as it will be added in the template
+  processed_goal = processed_goal.rstrip('.?!')
+
+
+  # 2. Construct the output prompt using the inversion template
+  #    This template directly instructs the LLM to perform the inversion.
+  output_prompt = (
+      f"Apply the Inversion Technique to the goal of '{processed_goal}'. "
+      f"Instead of figuring out how to achieve this goal, explore the opposite: "
+      f"What would one do to *actively ensure the failure* of this goal, or achieve the exact reverse outcome? "
+      f"Use the insights gained from this inverted perspective to identify potential obstacles, hidden assumptions, "
+      f"or critical pain points related to the original goal. Conclude by suggesting how understanding these "
+      f"'failure points' can help improve the strategy for achieving '{processed_goal}'."
+  )
+
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Solve problems by reversing assumptions. Takes a goal and prompts exploration of how to achieve the opposite to uncover obstacles.",
+  "name": "inversion_technique",
+  "parameters": {
+    "properties": {
+      "original_goal_or_assumption": {
+        "description": "The desired outcome or assumption to invert (e.g., 'increasing gym memberships', 'improving product quality').",
+        "type": "string"
+      }
+    },
+    "required": ["original_goal_or_assumption"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    goal = "increasing gym memberships"
+    output = inversion_technique(goal)
+    print(output)
+    # Expected Output: Apply the Inversion Technique to the goal of 'increasing gym memberships'. Instead of figuring out how to achieve this goal, explore the opposite: What would one do to *actively ensure the failure* of this goal, or achieve the exact reverse outcome? Use the insights gained from this inverted perspective to identify potential obstacles, hidden assumptions, or critical pain points related to the original goal. Conclude by suggesting how understanding these 'failure points' can help improve the strategy for achieving 'increasing gym memberships'.
+    ```
+    *(Note: This is slightly more verbose than the original example's prompt but provides clearer instructions to the LLM on *how* to apply the technique generally.)*
+
+2.  **Different Goal:**
+    ```python
+    goal = "Make our onboarding process smoother for new users"
+    output = inversion_technique(goal)
+    print(output)
+    # Expected Output: Apply the Inversion Technique to the goal of 'make our onboarding process smoother for new users'. Instead of figuring out how to achieve this goal, explore the opposite: What would one do to *actively ensure the failure* of this goal, or achieve the exact reverse outcome? Use the insights gained from this inverted perspective to identify potential obstacles, hidden assumptions, or critical pain points related to the original goal. Conclude by suggesting how understanding these 'failure points' can help improve the strategy for achieving 'make our onboarding process smoother for new users'.
+    ```
+
+3.  **Project Goal:**
+    ```python
+    goal = "Ensure the new feature launch is successful"
+    output = inversion_technique(goal)
+    print(output)
+    # Expected Output: Apply the Inversion Technique to the goal of 'ensure the new feature launch is successful'. Instead of figuring out how to achieve this goal, explore the opposite: What would one do to *actively ensure the failure* of this goal, or achieve the exact reverse outcome? Use the insights gained from this inverted perspective to identify potential obstacles, hidden assumptions, or critical pain points related to the original goal. Conclude by suggesting how understanding these 'failure points' can help improve the strategy for achieving 'ensure the new feature launch is successful'.
+    ```

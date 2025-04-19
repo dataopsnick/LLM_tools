@@ -1,0 +1,88 @@
+Okay, let's define how this `fishbone_diagram` tool/function would operate based on your requirements.
+
+**Conceptual Function Definition:**
+
+This function takes a single string input representing the problem statement and returns a formatted string ready to be used as a prompt for an LLM.
+
+```python
+import re
+
+def fishbone_diagram(problem_statement: str) -> str:
+  """
+  Transforms a problem statement into a detailed prompt for generating 
+  a Fishbone (Ishikawa) diagram analysis using an LLM.
+
+  Args:
+    problem_statement: The core problem to be analyzed 
+                       (e.g., "Why have Hospital wait times spiked?", 
+                        "Sales dropped 20% last quarter", 
+                        "Website conversion rate is low").
+
+  Returns:
+    A formatted prompt instructing an LLM to perform the analysis.
+  """
+
+  # 1. Clean and normalize the input problem statement
+  #    - Remove leading interrogatives like "Why have", "Why did", "What caused" etc.
+  #    - Capitalize the first letter.
+  #    - Ensure it reads like a statement of the problem.
+  processed_statement = problem_statement.strip()
+  # Simple regex to remove common question beginnings (can be expanded)
+  processed_statement = re.sub(r'^(Why have|Why did|Why is|Why are|What caused)\s+', '', processed_statement, flags=re.IGNORECASE)
+  # Capitalize the first letter and ensure it ends with a period.
+  processed_statement = processed_statement[0].upper() + processed_statement[1:]
+  if not processed_statement.endswith(('.', '?', '!')):
+      processed_statement += '.'
+      
+  # 2. Define generic example cause categories
+  #    These are common starting points, the LLM can adapt or use others.
+  #    Examples: People, Process, Technology, Materials, Environment, Measurement
+  #    Let's use a simpler, broadly applicable set for the template.
+  example_causes = "e.g., people, process, technology" 
+  # Alternative: example_causes = "e.g., Category 1, Category 2, Category 3" for ultimate generality
+  # Alternative: example_causes = "suggest relevant categories" to give the LLM more freedom
+
+  # 3. Construct the output prompt using the template
+  output_prompt = (
+      f"{processed_statement} Create a fishbone diagram categorizing potential causes "
+      f"({example_causes}). Convert this into an interactive Markdown table for team review."
+  )
+
+  return output_prompt
+
+```
+
+**Explanation of how it meets the requirements:**
+
+1.  **Input:** It takes `$PROBLEM_STATEMENT` as the `problem_statement` argument.
+2.  **Processing:** It performs basic cleaning on the input to make it a declarative statement (e.g., "Why have Hospital wait times spiked?" becomes "Hospital wait times spiked.").
+3.  **Template Application:** It constructs the output string following the exact template:
+    *   `$PROBLEM_STATEMENT`: This is the `processed_statement`.
+    *   `. Create a fishbone diagram categorizing causes (`: This is fixed text.
+    *   `$THREE_EXAMPLES_OF_PROBLEM_STATEMENT_UNDERLYING_CAUSES`: This is represented by the `example_causes` variable (e.g., "e.g., people, process, technology"). This provides guidance without being overly specific to one problem type like the original hospital example.
+    *   `). Convert this into an interactive Markdown table for team review.`: This is fixed text.
+
+**Example Usage:**
+
+1.  ```python
+    input_problem = "Why have Hospital wait times spiked?"
+    output = fishbone_diagram(input_problem)
+    print(output) 
+    # Expected Output: Hospital wait times spiked. Create a fishbone diagram categorizing potential causes (e.g., people, process, technology). Convert this into an interactive Markdown table for team review.
+    ```
+
+2.  ```python
+    input_problem = "Customer churn increased significantly last quarter"
+    output = fishbone_diagram(input_problem)
+    print(output)
+    # Expected Output: Customer churn increased significantly last quarter. Create a fishbone diagram categorizing potential causes (e.g., people, process, technology). Convert this into an interactive Markdown table for team review.
+    ```
+
+3.  ```python
+    input_problem = "What caused the recent server outages?"
+    output = fishbone_diagram(input_problem)
+    print(output)
+    # Expected Output: The recent server outages. Create a fishbone diagram categorizing potential causes (e.g., people, process, technology). Convert this into an interactive Markdown table for team review. 
+    ```
+
+This function now acts as the LLM tool you described, taking a high-level problem and structuring it into a specific, actionable prompt for generating a Fishbone diagram analysis.

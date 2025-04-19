@@ -1,0 +1,109 @@
+Okay, here is the definition for the `swot_analysis` tool, following the same pattern.
+
+**Conceptual Function Definition:**
+
+This function takes a subject/context string and optionally some specific areas to consider, then formats them into a detailed SWOT analysis prompt for an LLM.
+
+```python
+import re
+
+def swot_analysis(subject_or_context: str, specific_considerations: str = None) -> str:
+  """
+  Transforms a subject/context into a detailed prompt for generating 
+  a SWOT (Strengths, Weaknesses, Opportunities, Threats) analysis using an LLM.
+
+  Args:
+    subject_or_context: The entity, project, or situation to be analyzed 
+                        (e.g., "expanding my coffee shop chain into Japan", 
+                         "our company's current market position",
+                         "launching product X").
+    specific_considerations: Optional. A string describing specific factors or areas 
+                             the analysis should focus on (e.g., 
+                             "local competitors, cultural preferences, and supply chain logistics",
+                             "financial health, brand reputation, and emerging technologies").
+
+  Returns:
+    A formatted prompt instructing an LLM to perform the SWOT analysis.
+  """
+
+  # 1. Clean and normalize the input subject/context
+  processed_subject = subject_or_context.strip()
+  # Simple regex to remove common question beginnings (can be expanded)
+  processed_subject = re.sub(r'^(Analyze|Evaluate|Consider|Perform a SWOT on)\s+', '', processed_subject, flags=re.IGNORECASE)
+  # Capitalize the first letter and ensure it ends with a period if needed.
+  processed_subject = processed_subject[0].upper() + processed_subject[1:]
+  if not processed_subject.endswith(('.', '?', '!')):
+      processed_subject += '.'
+
+  # 2. Construct the core request
+  core_request = "Conduct a SWOT analysis"
+
+  # 3. Add specific considerations if provided, otherwise add generic guidance
+  if specific_considerations and specific_considerations.strip():
+      considerations_clause = f" considering {specific_considerations.strip()}"
+      if not considerations_clause.endswith('.'):
+          considerations_clause += '.'
+  else:
+      # Provide generic guidance if no specifics are given
+      considerations_clause = " identifying key internal (Strengths, Weaknesses) and external (Opportunities, Threats) factors."
+      
+  # 4. Add a concluding actionable request (enhancing the original example slightly)
+  concluding_request = " Highlight potential strategic implications or actions based on the findings." # Adjusted from original example's "Highlight risks and mitigation strategies" to be more broadly applicable to SWOT
+
+  # 5. Assemble the final prompt
+  output_prompt = f"{processed_subject} {core_request}{considerations_clause}{concluding_request}"
+  
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description":"Evaluate strengths, weaknesses, opportunities, and threats for a given subject or context.",
+  "name":"swot_analysis",
+  "parameters": {
+    "properties": {
+      "subject_or_context": {
+        "description": "The entity, project, or situation to be analyzed (e.g., 'expanding my coffee shop chain into Japan', 'our company's current market position').",
+        "type": "string"
+      },
+      "specific_considerations": {
+        "description": "Optional. Specific factors or areas the analysis should focus on (e.g., 'local competitors, cultural preferences, supply chain').",
+        "type": "string"
+      }
+    },
+    "required": ["subject_or_context"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    subject = "I'm expanding my coffee shop chain into Japan" 
+    considerations = "local competitors, cultural preferences, and supply chain logistics"
+    output = swot_analysis(subject, considerations)
+    print(output)
+    # Expected Output: I'm expanding my coffee shop chain into Japan. Conduct a SWOT analysis considering local competitors, cultural preferences, and supply chain logistics. Highlight potential strategic implications or actions based on the findings. 
+    ```
+    *(Note: The exact wording of the final sentence is slightly generalized from the specific "risks and mitigation" in the coffee shop example to be more broadly applicable, but captures the intent.)*
+
+2.  **Without Specific Considerations:**
+    ```python
+    subject = "Our startup's plan to enter the European market"
+    output = swot_analysis(subject)
+    print(output)
+    # Expected Output: Our startup's plan to enter the European market. Conduct a SWOT analysis identifying key internal (Strengths, Weaknesses) and external (Opportunities, Threats) factors. Highlight potential strategic implications or actions based on the findings.
+    ```
+
+3.  **Different Subject:**
+    ```python
+    subject = "Evaluate the adoption of AI in our customer service department"
+    output = swot_analysis(subject, "cost savings, employee morale, customer satisfaction, and data privacy")
+    print(output)
+    # Expected Output: The adoption of AI in our customer service department. Conduct a SWOT analysis considering cost savings, employee morale, customer satisfaction, and data privacy. Highlight potential strategic implications or actions based on the findings.
+    ```

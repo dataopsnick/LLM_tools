@@ -1,0 +1,115 @@
+Okay, here's the definition for the `lateral_thinking` tool.
+
+**Conceptual Function Definition:**
+
+This function takes a problem or goal statement, and optionally some example directions, and formats it into a prompt designed to elicit unconventional, lateral thinking-style solutions from an LLM.
+
+```python
+import re
+
+def lateral_thinking(problem_or_goal: str, focus_or_examples: str = None) -> str:
+    """
+    Transforms a problem/goal statement into a prompt encouraging 
+    lateral thinking and unconventional solutions using an LLM.
+
+    Args:
+        problem_or_goal: The challenge or objective to address 
+                         (e.g., "How could a grocery store reduce plastic use by 90%", 
+                          "increase user engagement on our platform", 
+                          "solve inner-city traffic congestion").
+        focus_or_examples: Optional. Specific areas, constraints, or 
+                           example unconventional directions to explore 
+                           (e.g., "edible packaging, incentivized returns, partnerships with local farmers", 
+                            "gamification, community features, surprising content formats",
+                            "alternative transport modes, dynamic scheduling, underground networks").
+
+    Returns:
+        A formatted prompt instructing an LLM to apply lateral thinking.
+    """
+    
+    # 1. Clean and normalize the input problem/goal
+    processed_problem = problem_or_goal.strip()
+    # Remove common question/command beginnings
+    processed_problem = re.sub(r'^(How could|How can|How might|How do we|Generate ideas to|Find ways to|Solve)\s+', '', processed_problem, flags=re.IGNORECASE)
+    
+    # Capitalize first letter if string is not empty
+    if processed_problem:
+        processed_problem = processed_problem[0].upper() + processed_problem[1:]
+    else:
+        # Handle cases where input becomes empty after cleaning
+        return "Please provide a valid problem or goal statement."
+
+    # Ensure ends with appropriate punctuation, default to period.
+    if not re.search(r'[.?!]$', processed_problem):
+        processed_problem += '.'
+
+    # 2. Define the core instruction
+    instruction = "Use lateral thinking to generate unconventional solutions."
+
+    # 3. Add specific guidance if provided, otherwise add generic prompt
+    if focus_or_examples and focus_or_examples.strip():
+        # Clean the examples part - remove trailing punctuation for smoother sentence construction
+        clean_examples = focus_or_examples.strip().rstrip('.?!') 
+        guidance = f" Explore possibilities such as {clean_examples}."
+    else:
+        # Generic prompt if no specific examples are given
+        guidance = " Consider approaches that challenge standard assumptions, reverse the problem, or combine unrelated concepts." # Enhanced generic guidance
+
+    # 4. Assemble the final prompt
+    output_prompt = f"{processed_problem} {instruction}{guidance}"
+    
+    return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Generates unconventional solutions to a problem or goal by applying lateral thinking techniques, challenging assumptions, and exploring non-obvious paths.",
+  "name": "lateral_thinking",
+  "parameters": {
+    "properties": {
+      "problem_or_goal": {
+        "description": "The challenge, question, or objective to address creatively (e.g., 'How to reduce plastic use by 90%', 'increase user engagement', 'make learning math fun').",
+        "type": "string"
+      },
+      "focus_or_examples": {
+        "description": "Optional. Specific unconventional areas, constraints, or example directions to seed the lateral thinking process (e.g., 'edible packaging, incentivized returns', 'gamification, unexpected rewards', 'using music and storytelling').",
+        "type": "string"
+      }
+    },
+    "required": ["problem_or_goal"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    problem = "How could a grocery store reduce plastic use by 90%?"
+    examples = "edible packaging, incentivized returns, or partnerships with local farmers"
+    output = lateral_thinking(problem, examples)
+    print(output)
+    # Expected Output: A grocery store reduce plastic use by 90%. Use lateral thinking to generate unconventional solutions. Explore possibilities such as edible packaging, incentivized returns, or partnerships with local farmers.
+    ```
+    *(Note: The initial "How could" is removed as per the cleaning logic, making it a statement followed by the instruction.)*
+
+2.  **Without Specific Examples:**
+    ```python
+    problem = "Increase participation in community recycling programs"
+    output = lateral_thinking(problem)
+    print(output)
+    # Expected Output: Increase participation in community recycling programs. Use lateral thinking to generate unconventional solutions. Consider approaches that challenge standard assumptions, reverse the problem, or combine unrelated concepts.
+    ```
+
+3.  **Different Problem with Examples:**
+    ```python
+    problem = "How can we make waiting in line less frustrating?"
+    examples = "turning queues into games, offering micro-learning opportunities, using dynamic virtual queuing"
+    output = lateral_thinking(problem, examples)
+    print(output)
+    # Expected Output: We make waiting in line less frustrating. Use lateral thinking to generate unconventional solutions. Explore possibilities such as turning queues into games, offering micro-learning opportunities, using dynamic virtual queuing.
+    ```

@@ -1,0 +1,97 @@
+Okay, here is the definition for the `expanded_perspective_analysis` tool.
+
+**Conceptual Function Definition:**
+
+```python
+import re
+
+def expanded_perspective_analysis(topic_or_problem: str) -> str:
+    """
+    Transforms a topic or problem into a prompt for analysis using an expanded 
+    set of thinking perspectives (building on the Six Thinking Hats) designed 
+    to uncover blind spots and hidden assumptions.
+
+    Args:
+      topic_or_problem: The subject, decision, or issue to be analyzed.
+
+    Returns:
+      A formatted prompt instructing an LLM to perform the expanded analysis.
+    """
+
+    # 1. Clean and normalize the input topic/problem
+    processed_topic = topic_or_problem.strip()
+    processed_topic = re.sub(r'^(Analyze|Evaluate|Consider|Discuss|Explore)\s+', '', processed_topic, flags=re.IGNORECASE)
+    processed_topic = processed_topic[0].upper() + processed_topic[1:]
+    processed_topic = processed_topic.rstrip('.?!') 
+
+    # 2. Define the expanded set of perspectives (lenses/hats)
+    perspective_descriptions = (
+        "1.  **White Hat (Analyst):** Facts, data, objective reality known and needed.\n"
+        "2.  **Red Hat (Heart):** Emotions, intuition, gut feelings.\n"
+        "3.  **Black Hat (Judge/Critic):** Risks, weaknesses, potential failures.\n"
+        "4.  **Yellow Hat (Optimist):** Benefits, value, opportunities.\n"
+        "5.  **Green Hat (Innovator):** Creativity, alternatives, new ideas.\n"
+        "6.  **Blue Hat (Facilitator):** Process, meta-thinking, summary, next steps.\n"
+        "7.  **Historical Lens (Historian):** Past context, precedents, lessons learned.\n"
+        "8.  **Futures Lens (Futurist):** Long-term consequences, scenarios, ripple effects.\n"
+        "9.  **Stakeholder Lens (Empathizer):** Impacts on different groups (customers, employees, community, etc.).\n"
+        "10. **Ethical Lens (Philosopher):** Values, fairness, principles, 'should we?'.\n"
+        "11. **Systems Lens (Ecologist):** Interconnections, feedback loops, bigger picture.\n"
+        "12. **Implementation Lens (Engineer):** Practicality, resources, feasibility, constraints.\n"
+        "13. **Assumptions Lens (Skeptic):** Underlying beliefs, unchallenged premises, biases."
+    )
+    
+    # 3. Construct the output prompt
+    output_prompt = (
+        f"Perform a deep analysis of '{processed_topic}' using an expanded set of thinking perspectives. The goal is to uncover hidden assumptions, potential blind spots, and generate robust insights by examining the issue through multiple distinct lenses:\n\n"
+        f"{perspective_descriptions}\n\n"
+        f"For each perspective, explore the relevant questions and insights related to '{processed_topic}'. Conclude by synthesizing the key findings across all perspectives, highlighting major tensions, synergies, and potential action points. Present the analysis in a structured format (e.g., sectioned list or table)."
+    )
+
+    return output_prompt
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Analyzes a topic using an expanded set of ~13 thinking perspectives (based on Six Hats plus dimensions like Time, Scale, Ethics, Systems, Assumptions) to uncover blind spots and hidden assumptions.",
+  "name": "expanded_perspective_analysis",
+  "parameters": {
+    "properties": {
+      "topic_or_problem": {
+        "description": "The topic, decision, or problem to be analyzed in depth.",
+        "type": "string"
+      }
+    },
+    "required": ["topic_or_problem"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+```python
+topic = "Evaluating the potential acquisition of a competitor company"
+output = expanded_perspective_analysis(topic)
+print(output)
+# Expected Output:
+# Perform a deep analysis of 'Evaluating the potential acquisition of a competitor company' using an expanded set of thinking perspectives. The goal is to uncover hidden assumptions, potential blind spots, and generate robust insights by examining the issue through multiple distinct lenses:
+#
+# 1.  **White Hat (Analyst):** Facts, data, objective reality known and needed.
+# 2.  **Red Hat (Heart):** Emotions, intuition, gut feelings.
+# 3.  **Black Hat (Judge/Critic):** Risks, weaknesses, potential failures.
+# 4.  **Yellow Hat (Optimist):** Benefits, value, opportunities.
+# 5.  **Green Hat (Innovator):** Creativity, alternatives, new ideas.
+# 6.  **Blue Hat (Facilitator):** Process, meta-thinking, summary, next steps.
+# 7.  **Historical Lens (Historian):** Past context, precedents, lessons learned.
+# 8.  **Futures Lens (Futurist):** Long-term consequences, scenarios, ripple effects.
+# 9.  **Stakeholder Lens (Empathizer):** Impacts on different groups (customers, employees, community, etc.).
+# 10. **Ethical Lens (Philosopher):** Values, fairness, principles, 'should we?'.
+# 11. **Systems Lens (Ecologist):** Interconnections, feedback loops, bigger picture.
+# 12. **Implementation Lens (Engineer):** Practicality, resources, feasibility, constraints.
+# 13. **Assumptions Lens (Skeptic):** Underlying beliefs, unchallenged premises, biases.
+#
+# For each perspective, explore the relevant questions and insights related to 'Evaluating the potential acquisition of a competitor company'. Conclude by synthesizing the key findings across all perspectives, highlighting major tensions, synergies, and potential action points. Present the analysis in a structured format (e.g., sectioned list or table).
+```

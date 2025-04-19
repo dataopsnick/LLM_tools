@@ -1,0 +1,116 @@
+Okay, here is the definition for the `analogous_reasoning` tool.
+
+**Conceptual Function Definition:**
+
+This function takes a source concept/domain and a target problem/domain, then formats them into a prompt that asks an LLM to apply the principles of the source to the target.
+
+```python
+import re
+
+def analogous_reasoning(source_domain_concept: str, target_problem_domain: str, adaptation_goal: str = None) -> str:
+  """
+  Transforms a source concept and target problem into a prompt for 
+  generating solutions using analogous reasoning with an LLM.
+
+  Args:
+    source_domain_concept: The source concept, model, process, or domain 
+                           to draw inspiration from (e.g., 
+                           "Netflix's recommendation algorithm", 
+                           "ant colony optimization", 
+                           "the structure of a rainforest ecosystem").
+    target_problem_domain: The target problem, area, or domain where the 
+                           analogy should be applied (e.g., 
+                           "personalized learning paths for high school math",
+                           "optimizing city traffic flow",
+                           "designing a sustainable co-living space").
+    adaptation_goal: Optional. A specific goal or focus for the adaptation 
+                     (e.g., "education", "improve efficiency", 
+                      "foster collaboration"). If None, a general adaptation
+                      instruction will be used.
+
+  Returns:
+    A formatted prompt instructing an LLM to perform the analogous reasoning.
+  """
+
+  # 1. Clean inputs (basic stripping)
+  source_clean = source_domain_concept.strip()
+  target_clean = target_problem_domain.strip()
+  
+  # 2. Construct the core question
+  core_question = f"How would the principles or structure of '{source_clean}' be applied to '{target_clean}'?"
+
+  # 3. Construct the adaptation instruction
+  if adaptation_goal and adaptation_goal.strip():
+    goal_clean = adaptation_goal.strip()
+    adaptation_instruction = f"Adapt its core concepts or logic specifically for {goal_clean}."
+  else:
+    adaptation_instruction = "Describe how its core principles or underlying logic could be adapted to this new context."
+    
+  # 4. Add a request for specifics (to encourage concrete output)
+  specifics_request = "Outline the key components or steps of this analogous approach."
+
+  # 5. Assemble the final prompt
+  output_prompt = f"{core_question} {adaptation_instruction} {specifics_request}"
+  
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Apply solutions, principles, or models from an unrelated source domain to a target problem or domain.",
+  "name": "analogous_reasoning",
+  "parameters": {
+    "properties": {
+      "source_domain_concept": {
+        "description": "The source concept, model, process, or domain to draw inspiration from (e.g., 'Netflix's recommendation algorithm', 'biomimicry of termite mounds').",
+        "type": "string"
+      },
+      "target_problem_domain": {
+        "description": "The target problem, area, or domain where the analogy should be applied (e.g., 'personalized learning paths', 'energy-efficient building design').",
+        "type": "string"
+      },
+      "adaptation_goal": {
+        "description": "Optional. Specific goal or focus for the adaptation (e.g., 'education', 'improve thermal regulation'). If omitted, a general adaptation will be requested.",
+        "type": "string"
+      }
+    },
+    "required": ["source_domain_concept", "target_problem_domain"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    source = "Netflix's recommendation algorithm"
+    target = "personalized learning paths for high school math"
+    goal = "education" 
+    output = analogous_reasoning(source, target, goal)
+    print(output)
+    # Expected Output: How would the principles or structure of 'Netflix's recommendation algorithm' be applied to 'personalized learning paths for high school math'? Adapt its core concepts or logic specifically for education. Outline the key components or steps of this analogous approach.
+    ```
+    *(Slightly more detailed than the original image prompt, but captures the core request and encourages a structured answer)*
+
+2.  **Without Specific Adaptation Goal:**
+    ```python
+    source = "Ant colony optimization algorithms"
+    target = "managing logistics for a large event"
+    output = analogous_reasoning(source, target)
+    print(output)
+    # Expected Output: How would the principles or structure of 'Ant colony optimization algorithms' be applied to 'managing logistics for a large event'? Describe how its core principles or underlying logic could be adapted to this new context. Outline the key components or steps of this analogous approach.
+    ```
+
+3.  **Different Example:**
+    ```python
+    source = "The way GitHub handles version control and collaboration"
+    target = "co-authoring scientific research papers"
+    goal = "improving transparency and managing revisions"
+    output = analogous_reasoning(source, target, goal)
+    print(output)
+    # Expected Output: How would the principles or structure of 'The way GitHub handles version control and collaboration' be applied to 'co-authoring scientific research papers'? Adapt its core concepts or logic specifically for improving transparency and managing revisions. Outline the key components or steps of this analogous approach.
+    ```

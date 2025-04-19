@@ -1,0 +1,104 @@
+Okay, here is the tool definition for `blue_ocean_strategy`.
+
+**Conceptual Function Definition:**
+
+This function takes a description of the current competitive situation and optional relevant trends, then formats them into a prompt instructing an LLM to apply the Blue Ocean Strategy framework.
+
+```python
+import re
+
+def blue_ocean_strategy(current_situation: str, relevant_trends: str = None) -> str:
+  """
+  Transforms a description of a market situation into a detailed prompt 
+  for applying the Blue Ocean Strategy using an LLM.
+
+  Args:
+    current_situation: Description of the entity or market situation, often highlighting 
+                       competition or saturation (e.g., 
+                       "Our fitness equipment company is struggling in a saturated market", 
+                       "Our SaaS product faces intense competition in the CRM space").
+    relevant_trends: Optional. Specific trends, technologies, or customer needs 
+                     to consider (e.g., "remote work, digital health, personalized wellness",
+                      "AI advancements, subscription models, sustainability concerns").
+
+  Returns:
+    A formatted prompt instructing an LLM to perform the Blue Ocean Strategy analysis.
+  """
+
+  # 1. Clean and normalize the input situation
+  processed_situation = current_situation.strip()
+  # Capitalize the first letter and ensure it ends with a period.
+  processed_situation = processed_situation[0].upper() + processed_situation[1:]
+  if not processed_situation.endswith(('.', '?', '!')):
+      processed_situation += '.'
+
+  # 2. Define the core instructions based on the Blue Ocean framework
+  instruction_part1 = "Apply the Blue Ocean Strategy to identify an untapped market segment and make the competition irrelevant."
+  # Include the ERRC Grid as it's a key tool
+  instruction_part2 = "Use the Eliminate-Reduce-Raise-Create (ERRC) Grid to propose innovative value propositions or features that could differentiate our offerings and create new demand."
+
+  # 3. Create the consideration clause
+  if relevant_trends and relevant_trends.strip():
+      # Format the trends nicely if provided
+      consideration_clause = f"Consider relevant factors such as {relevant_trends.strip()}."
+  else:
+      # Provide generic guidance if no specifics are given
+      consideration_clause = "Consider relevant industry trends, non-customer groups, and complementary product/service offerings."
+
+  # 4. Assemble the final prompt
+  output_prompt = f"{processed_situation} {instruction_part1} {instruction_part2} {consideration_clause}"
+  
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Generates a prompt to apply the Blue Ocean Strategy, aiming to find uncontested market space and make competition irrelevant using the ERRC Grid.",
+  "name": "blue_ocean_strategy",
+  "parameters": {
+    "properties": {
+      "current_situation": {
+        "description": "Description of the entity or market situation, often highlighting competition or saturation (e.g., 'Our fitness equipment company is struggling in a saturated market').",
+        "type": "string"
+      },
+      "relevant_trends": {
+        "description": "Optional. Specific trends, technologies, or customer needs to consider (e.g., 'remote work, digital health, personalized wellness').",
+        "type": "string"
+      }
+    },
+    "required": ["current_situation"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    situation = "Our fitness equipment company is struggling in a saturated market"
+    trends = "trends in remote work, digital health, and personalized wellness"
+    output = blue_ocean_strategy(situation, trends)
+    print(output)
+    # Expected Output: Our fitness equipment company is struggling in a saturated market. Apply the Blue Ocean Strategy to identify an untapped market segment and make the competition irrelevant. Use the Eliminate-Reduce-Raise-Create (ERRC) Grid to propose innovative value propositions or features that could differentiate our offerings and create new demand. Consider relevant factors such as trends in remote work, digital health, and personalized wellness.
+    ```
+
+2.  **Without Specific Trends:**
+    ```python
+    situation = "Our local bookstore chain faces pressure from online giants"
+    output = blue_ocean_strategy(situation)
+    print(output)
+    # Expected Output: Our local bookstore chain faces pressure from online giants. Apply the Blue Ocean Strategy to identify an untapped market segment and make the competition irrelevant. Use the Eliminate-Reduce-Raise-Create (ERRC) Grid to propose innovative value propositions or features that could differentiate our offerings and create new demand. Consider relevant industry trends, non-customer groups, and complementary product/service offerings.
+    ```
+
+3.  **Different Context:**
+    ```python
+    situation = "Develop a blue ocean strategy for a new sustainable packaging startup"
+    trends = "circular economy principles, B2B logistics, and consumer awareness of plastic waste"
+    output = blue_ocean_strategy(situation, trends)
+    print(output)
+    # Expected Output: Develop a blue ocean strategy for a new sustainable packaging startup. Apply the Blue Ocean Strategy to identify an untapped market segment and make the competition irrelevant. Use the Eliminate-Reduce-Raise-Create (ERRC) Grid to propose innovative value propositions or features that could differentiate our offerings and create new demand. Consider relevant factors such as circular economy principles, B2B logistics, and consumer awareness of plastic waste.
+    ```

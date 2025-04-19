@@ -1,0 +1,124 @@
+Okay, here is the definition for the `mece_principle` tool.
+
+**Conceptual Function Definition:**
+
+This function takes a topic that needs structuring and an optional purpose, then formats them into a detailed prompt instructing an LLM to apply the MECE principle.
+
+```python
+import re
+
+def mece_principle(topic_to_structure: str, purpose: str = None, output_format: str = "nested list") -> str:
+  """
+  Transforms a topic/problem into a detailed prompt for structuring information 
+  using the MECE (Mutually Exclusive, Collectively Exhaustive) principle with an LLM.
+
+  Args:
+    topic_to_structure: The subject matter to be segmented or categorized 
+                        (e.g., "our customer base", "reasons for project delays", 
+                         "potential market entry strategies").
+    purpose: Optional. The reason for structuring this topic 
+             (e.g., "for targeted marketing", "to identify root causes", 
+              "for strategic decision making").
+    output_format: Optional. The desired format for the output 
+                   (e.g., "nested list", "markdown table", "bullet points"). 
+                   Defaults to "nested list".
+
+  Returns:
+    A formatted prompt instructing an LLM to apply the MECE principle.
+  """
+
+  # 1. Clean and normalize the input topic
+  processed_topic = topic_to_structure.strip()
+  # Basic cleaning - remove leading action verbs if present
+  processed_topic = re.sub(r'^(Segment|Categorize|Analyze|Break down)\s+', '', processed_topic, flags=re.IGNORECASE)
+  # Capitalize first letter
+  processed_topic = processed_topic[0].upper() + processed_topic[1:]
+  if not processed_topic.endswith(('.', '?', '!')):
+      processed_topic += '.' # Add punctuation if missing for clarity
+
+  # 2. Construct the core request using MECE terminology
+  core_request = f"Segment or categorize '{processed_topic.strip('.')}' into MECE categories." # Referencing the topic clearly
+
+  # 3. Add purpose if provided
+  purpose_clause = ""
+  if purpose and purpose.strip():
+      processed_purpose = purpose.strip()
+      if not processed_purpose.lower().startswith("for "):
+          purpose_clause = f" for the purpose of {processed_purpose}"
+      else:
+          purpose_clause = f" {processed_purpose}"
+      if not purpose_clause.endswith('.'):
+          purpose_clause += '.'
+          
+  # 4. Add explanation and constraints based on MECE
+  mece_explanation = (" Ensure the categories are Mutually Exclusive (ME - distinct, no overlap) "
+                      "and Collectively Exhaustive (CE - covering all relevant aspects of the topic).")
+  # Include the overlap avoidance guidance from the example
+  overlap_warning = (" Explicitly avoid overlap between potentially related segments (e.g., avoid categories like 'small businesses' and 'startups' if they might overlap when segmenting customers).")
+  
+  # 5. Specify output format
+  format_request = f" Output the result as a {output_format}."
+
+  # 6. Assemble the final prompt
+  output_prompt = f"{core_request}{purpose_clause}{mece_explanation}{overlap_warning}{format_request}"
+  
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Ensure Mutually Exclusive, Collectively Exhaustive (MECE) structuring for a given topic or problem.",
+  "name": "mece_principle",
+  "parameters": {
+    "properties": {
+      "topic_to_structure": {
+        "description": "The subject matter to be segmented or categorized using MECE principles (e.g., 'our customer base', 'reasons for project delays').",
+        "type": "string"
+      },
+      "purpose": {
+        "description": "Optional. The reason or goal for structuring this topic (e.g., 'for targeted marketing', 'to identify root causes').",
+        "type": "string"
+      },
+       "output_format": {
+        "description": "Optional. The desired format for the output (e.g., 'nested list', 'markdown table'). Defaults to 'nested list'.",
+        "type": "string",
+        "default": "nested list" 
+      }
+    },
+    "required": ["topic_to_structure"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    topic = "our customer base"
+    purpose_text = "for targeted marketing"
+    output = mece_principle(topic, purpose_text)
+    print(output)
+    # Expected Output: Segment or categorize 'our customer base' into MECE categories for the purpose of targeted marketing. Ensure the categories are Mutually Exclusive (ME - distinct, no overlap) and Collectively Exhaustive (CE - covering all relevant aspects of the topic). Explicitly avoid overlap between potentially related segments (e.g., avoid categories like 'small businesses' and 'startups' if they might overlap when segmenting customers). Output the result as a nested list.
+    ```
+
+2.  **Different Topic, No Purpose:**
+    ```python
+    topic = "Analyze the key drivers of employee satisfaction"
+    output = mece_principle(topic)
+    print(output)
+    # Expected Output: Segment or categorize 'The key drivers of employee satisfaction' into MECE categories. Ensure the categories are Mutually Exclusive (ME - distinct, no overlap) and Collectively Exhaustive (CE - covering all relevant aspects of the topic). Explicitly avoid overlap between potentially related segments (e.g., avoid categories like 'small businesses' and 'startups' if they might overlap when segmenting customers). Output the result as a nested list. 
+    ```
+
+3.  **Different Topic, Different Format:**
+    ```python
+    topic = "Potential solutions for reducing manufacturing defects"
+    purpose_text = "to prioritize improvement initiatives"
+    output_format_text = "markdown table"
+    output = mece_principle(topic, purpose_text, output_format_text)
+    print(output)
+    # Expected Output: Segment or categorize 'Potential solutions for reducing manufacturing defects' into MECE categories for the purpose of to prioritize improvement initiatives. Ensure the categories are Mutually Exclusive (ME - distinct, no overlap) and Collectively Exhaustive (CE - covering all relevant aspects of the topic). Explicitly avoid overlap between potentially related segments (e.g., avoid categories like 'small businesses' and 'startups' if they might overlap when segmenting customers). Output the result as a markdown table.
+    ```

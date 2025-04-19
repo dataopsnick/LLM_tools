@@ -1,0 +1,126 @@
+Okay, here is the definition for the `ooda_loop` tool based on the provided example.
+
+**Conceptual Function Definition:**
+
+This function takes a dynamic situation or scenario and optional parameters (timeframe, specific elements) to structure a prompt for creating an OODA Loop response plan.
+
+```python
+import re
+
+def format_elements_list(elements: list[str]) -> str:
+  """Helper function to format a list of strings into a readable clause."""
+  if not elements:
+    return ""
+  if len(elements) == 1:
+    return elements[0]
+  if len(elements) == 2:
+    return f"{elements[0]} and {elements[1]}"
+  # Join all but the last with commas, then add ", and " + last element
+  return ", ".join(elements[:-1]) + ", and " + elements[-1]
+
+def ooda_loop(situation: str, timeframe: str = None, elements_to_include: list[str] = None) -> str:
+  """
+  Transforms a dynamic situation description into a prompt for generating 
+  an OODA Loop (Observe-Orient-Decide-Act) response plan using an LLM.
+
+  Args:
+    situation: The dynamic problem or scenario requiring a response plan
+               (e.g., "Crisis PR scenario: Our product caused a safety incident",
+                "Sudden market shift impacting sales", 
+                "Cybersecurity breach detected").
+    timeframe: Optional. The specific period the plan should cover 
+               (e.g., "the first 72 hours", "the next 24 hours", 
+                "the initial response phase"). Defaults to a generic timeframe if None.
+    elements_to_include: Optional. A list of specific aspects or inputs that 
+                         must be incorporated into the plan (e.g., 
+                         ['social listening', 'stakeholder comms'], 
+                         ['technical diagnostics', 'customer support scripts']).
+
+  Returns:
+    A formatted prompt instructing an LLM to create the OODA Loop plan.
+  """
+
+  # 1. Clean and normalize the input situation
+  processed_situation = situation.strip()
+  # Capitalize the first letter and ensure it ends with a period.
+  processed_situation = processed_situation[0].upper() + processed_situation[1:]
+  if not processed_situation.endswith(('.', '?', '!')):
+      processed_situation += '.'
+
+  # 2. Define the timeframe clause
+  timeframe_clause = f" for {timeframe.strip()}" if timeframe and timeframe.strip() else " for the initial response phase" # Default timeframe
+
+  # 3. Define the elements clause
+  elements_str = format_elements_list(elements_to_include)
+  elements_clause = f" including {elements_str}" if elements_str else "" # Add 'including' only if elements exist
+
+  # 4. Assemble the final prompt
+  output_prompt = (
+      f"{processed_situation} Map an OODA Loop (Observe-Orient-Decide-Act) response plan"
+      f"{timeframe_clause}{elements_clause}."
+      f" Detail specific actions anticipated or required within each phase (Observe, Orient, Decide, Act)." # Added detail request
+  )
+
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Generate an OODA Loop (Observe-Orient-Decide-Act) response plan for dynamic problems or crises.",
+  "name": "ooda_loop",
+  "parameters": {
+    "properties": {
+      "situation": {
+        "description": "The dynamic problem, crisis, or scenario requiring a response plan (e.g., 'Product safety incident', 'Competitor action', 'System outage').",
+        "type": "string"
+      },
+      "timeframe": {
+        "description": "Optional. The specific period the plan should cover (e.g., 'the first 72 hours', 'the next week'). Defaults to the initial phase.",
+        "type": "string"
+      },
+      "elements_to_include": {
+        "description": "Optional. Specific aspects, data sources, or communication channels to incorporate into the plan (e.g., ['social listening', 'stakeholder comms']).",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": ["situation"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    situation = "Crisis PR scenario: Our product caused a safety incident."
+    timeframe = "the first 72 hours"
+    elements = ['social listening', 'stakeholder comms']
+    output = ooda_loop(situation, timeframe=timeframe, elements_to_include=elements)
+    print(output)
+    # Expected Output: Crisis PR scenario: Our product caused a safety incident. Map an OODA Loop (Observe-Orient-Decide-Act) response plan for the first 72 hours including social listening and stakeholder comms. Detail specific actions anticipated or required within each phase (Observe, Orient, Decide, Act).
+    ```
+
+2.  **Different Scenario, Default Timeframe, No Specific Elements:**
+    ```python
+    situation = "A major competitor just announced a groundbreaking feature."
+    output = ooda_loop(situation)
+    print(output)
+    # Expected Output: A major competitor just announced a groundbreaking feature. Map an OODA Loop (Observe-Orient-Decide-Act) response plan for the initial response phase. Detail specific actions anticipated or required within each phase (Observe, Orient, Decide, Act).
+    ```
+
+3.  **Different Scenario and Elements:**
+    ```python
+    situation = "Unexpected surge in website traffic is causing server slowdowns."
+    timeframe = "the next 6 hours"
+    elements = ['server performance monitoring', 'load balancing adjustments', 'customer communication channels']
+    output = ooda_loop(situation, timeframe=timeframe, elements_to_include=elements)
+    print(output)
+    # Expected Output: Unexpected surge in website traffic is causing server slowdowns. Map an OODA Loop (Observe-Orient-Decide-Act) response plan for the next 6 hours including server performance monitoring, load balancing adjustments, and customer communication channels. Detail specific actions anticipated or required within each phase (Observe, Orient, Decide, Act).
+    ```

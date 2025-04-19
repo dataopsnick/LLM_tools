@@ -1,0 +1,107 @@
+Okay, here is the definition for the `root_cause_analysis` tool.
+
+**Conceptual Function Definition:**
+
+This function takes a problem statement and optionally specific data sources or areas to investigate, then formats them into a detailed Root Cause Analysis prompt for an LLM.
+
+```python
+import re
+
+def root_cause_analysis(problem_statement: str, data_sources_to_analyze: str = None) -> str:
+  """
+  Transforms a problem description into a detailed prompt for generating 
+  a Root Cause Analysis (RCA) using an LLM.
+
+  Args:
+    problem_statement: The recurring problem or issue to analyze 
+                       (e.g., "My e-commerce platform's checkout abandonment rate 
+                        increased by 30% last month despite stable traffic", 
+                        "Project deadlines are consistently missed", 
+                        "High rate of product returns for model Z").
+    data_sources_to_analyze: Optional. A string describing specific data, logs, feedback, 
+                              or areas to investigate (e.g., 
+                              "user session data, payment logs, and customer feedback",
+                              "project timelines, resource allocation, team communication logs",
+                              "return reasons, customer support tickets, manufacturing QA reports").
+                              If omitted, the prompt will ask the LLM to consider relevant factors.
+
+  Returns:
+    A formatted prompt instructing an LLM to perform the Root Cause Analysis.
+  """
+
+  # 1. Clean and normalize the input problem statement
+  processed_problem = problem_statement.strip()
+  # Simple regex to remove common leading phrases (can be expanded)
+  processed_problem = re.sub(r'^(Analyze|Identify|Find the root cause of)\s+', '', processed_problem, flags=re.IGNORECASE)
+  # Capitalize the first letter and ensure it ends with a period.
+  processed_problem = processed_problem[0].upper() + processed_problem[1:]
+  if not processed_problem.endswith(('.', '?', '!')):
+      processed_problem += '.'
+      
+  # 2. Construct the analysis instruction clause
+  if data_sources_to_analyze and data_sources_to_analyze.strip():
+      analysis_clause = f" Analyze {data_sources_to_analyze.strip()}"
+  else:
+      # Provide generic guidance if no specifics are given
+      analysis_clause = " Analyze relevant data and contributing factors" 
+      
+  # 3. Define the core goal and desired output format
+  goal_and_output = " to identify root causes. Provide actionable recommendations."
+
+  # 4. Assemble the final prompt
+  output_prompt = f"{processed_problem}{analysis_clause}{goal_and_output}"
+  
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description":"Identify underlying causes of recurring issues by analyzing a problem statement and specified data sources.",
+  "name":"root_cause_analysis",
+  "parameters": {
+    "properties": {
+      "problem_statement": {
+        "description": "The recurring problem or issue to analyze (e.g., 'Checkout abandonment rate increased by 30% last month despite stable traffic').",
+        "type": "string"
+      },
+      "data_sources_to_analyze": {
+        "description": "Optional. Specific data, logs, feedback, or areas to investigate (e.g., 'user session data, payment logs, customer feedback'). If omitted, the LLM will be asked to consider relevant factors.",
+        "type": "string"
+      }
+    },
+    "required": ["problem_statement"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    problem = "My e-commerce platform's checkout abandonment rate increased by 30% last month despite stable traffic"
+    data = "user session data, payment logs, and customer feedback"
+    output = root_cause_analysis(problem, data)
+    print(output)
+    # Expected Output: My e-commerce platform's checkout abandonment rate increased by 30% last month despite stable traffic. Analyze user session data, payment logs, and customer feedback to identify root causes. Provide actionable recommendations.
+    ```
+
+2.  **Without Specific Data Sources:**
+    ```python
+    problem = "Our marketing campaigns have shown declining ROI for three consecutive quarters"
+    output = root_cause_analysis(problem)
+    print(output)
+    # Expected Output: Our marketing campaigns have shown declining ROI for three consecutive quarters. Analyze relevant data and contributing factors to identify root causes. Provide actionable recommendations.
+    ```
+
+3.  **Different Problem and Data:**
+    ```python
+    problem = "There's been a rise in negative customer reviews regarding product durability"
+    data = "customer reviews, support call transcripts, material specifications, and QA test results"
+    output = root_cause_analysis(problem, data)
+    print(output)
+    # Expected Output: There's been a rise in negative customer reviews regarding product durability. Analyze customer reviews, support call transcripts, material specifications, and QA test results to identify root causes. Provide actionable recommendations.
+    ```

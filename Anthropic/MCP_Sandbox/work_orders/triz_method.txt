@@ -1,0 +1,138 @@
+Okay, here is the definition for the `triz_method` tool, based on the provided example and structure.
+
+**Conceptual Function Definition:**
+
+This function takes the problem/system to improve, an optional specific TRIZ principle, and optional desired output types, then formats them into a TRIZ analysis prompt for an LLM.
+
+```python
+import re
+
+def triz_method(problem_or_system: str, triz_principle: str = None, desired_outputs: str = None) -> str:
+  """
+  Transforms a problem description into a detailed prompt for applying 
+  the TRIZ methodology using an LLM.
+
+  Args:
+    problem_or_system: The core problem or system to improve 
+                       (e.g., "improve solar panel efficiency", 
+                        "reduce waste in manufacturing", 
+                        "make packaging easier to open").
+    triz_principle: Optional. The specific TRIZ inventive principle to apply 
+                    (e.g., "Principle 35 (parameter changes)", "Principle 1 (Segmentation)",
+                     "Principle 10 (Prior Action)"). If omitted, the prompt will ask
+                     the LLM to identify relevant principles.
+    desired_outputs: Optional. Specific kinds of suggestions or configurations to explore
+                     (e.g., "material modifications and novel energy storage configurations",
+                      "process changes and automation ideas",
+                      "structural redesigns and alternative mechanisms").
+
+  Returns:
+    A formatted prompt instructing an LLM to perform the TRIZ analysis.
+  """
+
+  # 1. Clean and normalize the input problem/system
+  processed_problem = problem_or_system.strip()
+  # Ensure it ends logically, often suitable without a period for 'to improve X' structure
+  # Capitalize if needed
+  processed_problem = processed_problem[0].lower() + processed_problem[1:] # Often follows 'to', so lowercase start
+
+  # 2. Construct the main part of the prompt based on whether a principle is provided
+  if triz_principle and triz_principle.strip():
+      principle_str = triz_principle.strip()
+      main_request = f"Apply TRIZ {principle_str} to {processed_problem}."
+  else:
+      # Ask LLM to identify and apply principles if none specified
+      main_request = (f"Analyze how to {processed_problem} using the TRIZ methodology. "
+                      "Identify relevant TRIZ inventive principles and suggest applications.")
+
+  # 3. Construct the suggestion part
+  if desired_outputs and desired_outputs.strip():
+      suggestion_request = f" Suggest {desired_outputs.strip()}."
+      # Ensure suggestion ends correctly
+      if not suggestion_request.endswith(('.', '?', '!')):
+          suggestion_request += '.'
+  else:
+      # Generic suggestion request if no specifics provided
+      suggestion_request = " Suggest innovative solutions or improvements based on the principle(s)."
+
+  # 4. Assemble the final prompt
+  # Combine requests, avoid double suggestion prompts if principle wasn't provided initially
+  if triz_principle and triz_principle.strip():
+      output_prompt = main_request + suggestion_request
+  else:
+      # The main_request already asks for suggestions when no principle is given
+      output_prompt = main_request 
+      # Optionally add the specific desired outputs if provided EVEN IF no principle was given
+      if desired_outputs and desired_outputs.strip():
+          output_prompt = (f"Analyze how to {processed_problem} using the TRIZ methodology. "
+                           f"Identify relevant TRIZ inventive principles and apply them."
+                           f" Focus on suggesting {desired_outputs.strip()}.")
+
+  return output_prompt.strip() # Clean up final output
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Leverage patterns from past innovations using the TRIZ methodology to solve a problem or improve a system.",
+  "name": "triz_method",
+  "parameters": {
+    "properties": {
+      "problem_or_system": {
+        "description": "The core problem statement or the system needing improvement (e.g., 'improve solar panel efficiency', 'reduce coffee spill frequency').",
+        "type": "string"
+      },
+      "triz_principle": {
+        "description": "Optional. The specific TRIZ inventive principle (e.g., 'Principle 35 (parameter changes)', 'Segmentation'). If omitted, the LLM will be asked to identify relevant principles.",
+        "type": "string"
+      },
+      "desired_outputs": {
+        "description": "Optional. Specific kinds of suggestions or areas to focus on (e.g., 'material modifications and novel energy storage configurations', 'process changes').",
+        "type": "string"
+      }
+    },
+    "required": ["problem_or_system"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    problem = "improve solar panel efficiency"
+    principle = "Principle 35 (parameter changes)"
+    outputs = "material modifications and novel energy storage configurations"
+    output = triz_method(problem, principle, outputs)
+    print(output)
+    # Expected Output: Apply TRIZ Principle 35 (parameter changes) to improve solar panel efficiency. Suggest material modifications and novel energy storage configurations.
+    ```
+
+2.  **Without Specific Principle:**
+    ```python
+    problem = "reduce noise from a kitchen blender"
+    output = triz_method(problem)
+    print(output)
+    # Expected Output: Analyze how to reduce noise from a kitchen blender using the TRIZ methodology. Identify relevant TRIZ inventive principles and suggest applications.
+    ```
+
+3.  **Without Specific Principle but with Desired Outputs:**
+    ```python
+    problem = "reduce noise from a kitchen blender"
+    outputs = "changes to the motor housing and blade design"
+    output = triz_method(problem, desired_outputs=outputs)
+    print(output)
+    # Expected Output: Analyze how to reduce noise from a kitchen blender using the TRIZ methodology. Identify relevant TRIZ inventive principles and apply them. Focus on suggesting changes to the motor housing and blade design.
+    ```
+
+4.  **With Principle but No Specific Outputs:**
+    ```python
+    problem = "make product packaging frustration-free to open"
+    principle = "Principle 1 (Segmentation)"
+    output = triz_method(problem, principle)
+    print(output)
+    # Expected Output: Apply TRIZ Principle 1 (Segmentation) to make product packaging frustration-free to open. Suggest innovative solutions or improvements based on the principle(s).
+    ```

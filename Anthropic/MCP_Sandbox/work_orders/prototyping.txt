@@ -1,0 +1,91 @@
+Okay, here is the definition for the `prototyping` tool, based on the provided card and pattern.
+
+**Conceptual Function Definition:**
+
+This function takes a description of the concept or product to be prototyped and generates a prompt instructing an LLM to outline its key aspects and potentially create a visual representation.
+
+```python
+import re
+
+def prototyping(prototype_subject: str) -> str:
+  """
+  Transforms a subject description into a detailed prompt for generating 
+  a low-fidelity prototype concept using an LLM, including textual flows 
+  and potentially a visual representation request.
+
+  Args:
+    prototype_subject: Description of the concept or product needing a prototype
+                       (e.g., "a mental health app", 
+                        "a new e-commerce checkout process",
+                        "an internal dashboard for sales data").
+
+  Returns:
+    A formatted prompt instructing an LLM to help design the prototype.
+  """
+
+  # 1. Clean and normalize the input subject
+  processed_subject = prototype_subject.strip()
+  # Optional: Remove leading verbs if necessary (e.g., "Design", "Create")
+  processed_subject = re.sub(r'^(Design|Create|Build|Prototype)\s+', '', processed_subject, flags=re.IGNORECASE)
+  # Ensure it starts appropriately (e.g., prepend 'a' or 'an' if needed - this is complex, skip for now)
+  # Ensure it doesn't end with punctuation that would break the sentence.
+  processed_subject = processed_subject.rstrip('.?!,')
+
+  # 2. Define the core request and instructions based on the example
+  core_request = f"Design a low-fidelity prototype for {processed_subject}."
+  instruction_flow = "Outline key user flows in text"
+  # Reference the visual generation part from the example
+  instruction_visual = "then generate a wireframe sketch using DALL-E integration (or similar image generation) for visual reference." 
+
+  # 3. Assemble the final prompt
+  # Combining instructions similar to the original example structure
+  output_prompt = f"{core_request} {instruction_flow}, {instruction_visual}"
+  
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Build rapid models to test concepts by outlining key user flows and requesting a visual wireframe.",
+  "name": "prototyping",
+  "parameters": {
+    "properties": {
+      "prototype_subject": {
+        "description": "Description of the concept or product needing a prototype (e.g., 'a mental health app', 'a new onboarding sequence').",
+        "type": "string"
+      }
+    },
+    "required": ["prototype_subject"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    subject = "a mental health app" 
+    output = prototyping(subject)
+    print(output)
+    # Expected Output: Design a low-fidelity prototype for a mental health app. Outline key user flows in text, then generate a wireframe sketch using DALL-E integration (or similar image generation) for visual reference.
+    ```
+
+2.  **Different Subject:**
+    ```python
+    subject = "a customer feedback portal for our SaaS product"
+    output = prototyping(subject)
+    print(output)
+    # Expected Output: Design a low-fidelity prototype for a customer feedback portal for our SaaS product. Outline key user flows in text, then generate a wireframe sketch using DALL-E integration (or similar image generation) for visual reference.
+    ```
+
+3.  **Input with Leading Verb:**
+    ```python
+    subject = "Prototype an electric scooter rental kiosk interface"
+    output = prototyping(subject)
+    print(output)
+    # Expected Output: Design a low-fidelity prototype for an electric scooter rental kiosk interface. Outline key user flows in text, then generate a wireframe sketch using DALL-E integration (or similar image generation) for visual reference. 
+    ```

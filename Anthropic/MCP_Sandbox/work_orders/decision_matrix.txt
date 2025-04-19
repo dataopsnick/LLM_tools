@@ -1,0 +1,110 @@
+Okay, here is the definition for the `decision_matrix` tool.
+
+**Conceptual Function Definition:**
+
+This function takes the decision goal, the criteria for evaluation (potentially including weights), and optionally the specific options, then formats them into a prompt for an LLM to generate a decision matrix.
+
+```python
+import re
+
+def decision_matrix(decision_goal: str, criteria_description: str, options_description: str = None) -> str:
+  """
+  Transforms a decision-making scenario into a detailed prompt for generating 
+  a Decision Matrix analysis using an LLM.
+
+  Args:
+    decision_goal: The overall objective or choice to be made 
+                   (e.g., "choose between three CRM platforms", 
+                    "select the best location for a new office").
+    criteria_description: A string listing the criteria for comparison. 
+                          This can optionally include weights directly, like the example 
+                          (e.g., "pricing, scalability, integration ease (40% weight), user reviews (20% weight)",
+                           or just "cost, features, support").
+    options_description: Optional. A string describing the specific options being considered
+                         (e.g., "three CRM platforms", "Platform A, Platform B, Platform C", 
+                          "Location X, Location Y"). If omitted, the LLM might be asked to 
+                          compare generic options or focus on the structure.
+
+  Returns:
+    A formatted prompt instructing an LLM to perform the Decision Matrix analysis.
+  """
+
+  # 1. Clean and normalize the decision goal
+  processed_goal = decision_goal.strip()
+  # Remove common starting phrases
+  processed_goal = re.sub(r'^(I need to|Help me|Decide|Choose|Select)\s+', '', processed_goal, flags=re.IGNORECASE)
+  # Capitalize first letter
+  processed_goal = processed_goal[0].upper() + processed_goal[1:]
+  # Ensure it ends like a statement/goal
+  if not processed_goal.endswith(('.', '?', '!')):
+      processed_goal += '.' # Add a period if needed
+
+  # 2. Start building the prompt with the goal
+  prompt_parts = [processed_goal]
+
+  # 3. Add the core instruction and specify options
+  options_clause = f" {options_description.strip()}" if options_description and options_description.strip() else " the available options"
+  prompt_parts.append(f"Create a decision matrix comparing{options_clause}")
+
+  # 4. Add the criteria description (this string might contain weights as per the example)
+  prompt_parts.append(f"based on criteria such as: {criteria_description.strip()}.")
+
+  # 5. Add concluding instructions for scoring and output format
+  prompt_parts.append("Assign scores (e.g., 1-5 or relevant scale) for each option against each criterion. If weights are specified or implied in the criteria description, calculate the weighted scores. Present the results clearly in a table format and recommend the best option based on the analysis.")
+
+  # 6. Assemble the final prompt
+  output_prompt = " ".join(prompt_parts)
+  # Minor cleanup for potential spacing issues
+  output_prompt = output_prompt.replace("..", ".").replace(" .", ".")
+
+  return output_prompt
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Compare options using weighted criteria to facilitate a decision.",
+  "name": "decision_matrix",
+  "parameters": {
+    "properties": {
+      "decision_goal": {
+        "description": "The overall objective or choice to be made (e.g., 'choose between three CRM platforms').",
+        "type": "string"
+      },
+      "criteria_description": {
+        "description": "List the criteria for comparison. Can optionally include weights, e.g., 'pricing, scalability, integration ease (40% weight), user reviews (20% weight)'.",
+        "type": "string"
+      },
+      "options_description": {
+        "description": "Optional. Describe the options being compared (e.g., 'three specific CRM platforms', 'Option A, Option B').",
+        "type": "string"
+      }
+    },
+    "required": ["decision_goal", "criteria_description"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    goal = "I need to choose between three CRM platforms"
+    criteria = "pricing, scalability, integration ease (40% weight), and user reviews (20% weight)"
+    output = decision_matrix(decision_goal=goal, criteria_description=criteria) 
+    # Note: options_description is omitted here, matching the ambiguity of the original prompt
+    print(output)
+    # Expected Output: Choose between three CRM platforms. Create a decision matrix comparing the available options based on criteria such as: pricing, scalability, integration ease (40% weight), and user reviews (20% weight). Assign scores (e.g., 1-5 or relevant scale) for each option against each criterion. If weights are specified or implied in the criteria description, calculate the weighted scores. Present the results clearly in a table format and recommend the best option based on the analysis.
+    ```
+
+2.  **With Specific Options and No Weights:**
+    ```python
+    goal = "Select a cloud storage provider for our team"
+    criteria = "cost per GB, security features, collaboration tools, integration options"
+    options = "Google Drive, Dropbox, and Microsoft OneDrive"
+    output = decision_matrix(decision_goal=goal, criteria_description=criteria, options_description=options)
+    print(output)
+    # Expected Output: Select a cloud storage provider for our team. Create a decision matrix comparing Google Drive, Dropbox, and Microsoft OneDrive based on criteria such as: cost per GB, security features, collaboration tools, integration options. Assign scores (e.g., 1-5 or relevant scale) for each option against each criterion. If weights are specified or implied in the criteria description, calculate the weighted scores. Present the results clearly in a table format and recommend the best option based on the analysis.
+    ```

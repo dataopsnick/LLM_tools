@@ -1,0 +1,121 @@
+Okay, here is the definition for the `pre_mortem_analysis` tool.
+
+**Conceptual Function Definition:**
+
+This function takes details about a future project or plan and formats them into a prompt for conducting a Pre-Mortem analysis, focusing on anticipating failures.
+
+```python
+import re
+
+def pre_mortem_analysis(project_or_plan: str, failure_timeframe: str = None, failure_description: str = "failed significantly") -> str:
+  """
+  Transforms details about a project/plan into a prompt for generating 
+  a Pre-Mortem Analysis using an LLM, focusing on anticipating failures.
+
+  Args:
+    project_or_plan: The project, plan, initiative, or launch being analyzed
+                     (e.g., "our new EV battery launch", "the Q4 marketing campaign",
+                      "implementing the new software").
+    failure_timeframe: Optional. The hypothetical point in time when the failure occurs
+                       (e.g., "in 2026", "by the end of the quarter", "within 6 months of launch").
+    failure_description: Optional. How the project failed in the hypothetical scenario
+                         (e.g., "failed catastrophically", "missed its targets by 50%", 
+                          "was rejected by users", "resulted in major data loss"). 
+                         Defaults to "failed significantly".
+
+  Returns:
+    A formatted prompt instructing an LLM to perform the Pre-Mortem analysis.
+  """
+
+  # 1. Clean the project/plan description
+  processed_project = project_or_plan.strip().rstrip('.')
+  # Optional: Remove leading phrases like "the plan for", "our upcoming" etc. if needed
+
+  # 2. Construct the timeframe clause
+  timeframe_clause = ""
+  if failure_timeframe and failure_timeframe.strip():
+      # Add a suitable preposition if one isn't obviously part of the timeframe
+      ft_lower = failure_timeframe.strip().lower()
+      if not (ft_lower.startswith("in ") or ft_lower.startswith("by ") or ft_lower.startswith("within ")):
+         preposition = "in" # Default preposition
+         # Simple heuristic: use 'by' for deadlines, 'in' for periods/years
+         if "end of" in ft_lower or "deadline" in ft_lower:
+             preposition = "by"
+         elif ft_lower.isdigit() or "q" in ft_lower: # Year or Quarter
+             preposition = "in"
+         timeframe_clause = f" {preposition} {failure_timeframe.strip()}"
+      else:
+         timeframe_clause = f" {failure_timeframe.strip()}"
+
+
+  # 3. Construct the core hypothetical failure statement
+  hypothetical_failure = f"Imagine {processed_project} has {failure_description.strip()}{timeframe_clause}."
+
+  # 4. Define the tasks for the LLM
+  task1 = "Identify a list of plausible reasons why this failure happened."
+  # Enhanced version of the original's "create a risk mitigation plan..."
+  task2 = "Based on these potential reasons, create a proactive risk mitigation plan outlining preventative actions, suggested timelines, and potential areas of ownership." 
+
+  # 5. Assemble the final prompt
+  output_prompt = f"Perform a Pre-Mortem Analysis. {hypothetical_failure} {task1} {task2}"
+  
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Anticipate failure points for a project or plan before implementation by imagining it has already failed.",
+  "name": "pre_mortem_analysis",
+  "parameters": {
+    "properties": {
+      "project_or_plan": {
+        "description": "The project, plan, initiative, or launch being analyzed (e.g., 'our new EV battery launch', 'the Q4 marketing campaign').",
+        "type": "string"
+      },
+      "failure_timeframe": {
+        "description": "Optional. The hypothetical point in time when the failure occurs (e.g., 'in 2026', 'by the end of the quarter').",
+        "type": "string"
+      },
+      "failure_description": {
+        "description": "Optional. How the project failed in the hypothetical scenario (e.g., 'failed catastrophically', 'missed targets by 50%'). Defaults to 'failed significantly'.",
+        "type": "string"
+      }
+    },
+    "required": ["project_or_plan"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    project = "our new EV battery"
+    timeframe = "2026"
+    description = "failed catastrophically"
+    output = pre_mortem_analysis(project, failure_timeframe=timeframe, failure_description=description)
+    print(output)
+    # Expected Output: Perform a Pre-Mortem Analysis. Imagine our new EV battery has failed catastrophically in 2026. Identify a list of plausible reasons why this failure happened. Based on these potential reasons, create a proactive risk mitigation plan outlining preventative actions, suggested timelines, and potential areas of ownership.
+    ```
+
+2.  **Using Defaults:**
+    ```python
+    project = "the website redesign project"
+    output = pre_mortem_analysis(project)
+    print(output)
+    # Expected Output: Perform a Pre-Mortem Analysis. Imagine the website redesign project has failed significantly. Identify a list of plausible reasons why this failure happened. Based on these potential reasons, create a proactive risk mitigation plan outlining preventative actions, suggested timelines, and potential areas of ownership.
+    ```
+
+3.  **Different Scenario:**
+    ```python
+    project = "Our expansion into the South American market"
+    timeframe = "within the first year"
+    description = "failed to gain traction"
+    output = pre_mortem_analysis(project, failure_timeframe=timeframe, failure_description=description)
+    print(output)
+    # Expected Output: Perform a Pre-Mortem Analysis. Imagine Our expansion into the South American market has failed to gain traction within the first year. Identify a list of plausible reasons why this failure happened. Based on these potential reasons, create a proactive risk mitigation plan outlining preventative actions, suggested timelines, and potential areas of ownership.
+    ```

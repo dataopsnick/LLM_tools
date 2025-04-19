@@ -1,0 +1,106 @@
+Okay, here is the definition for the `first_principles_thinking` tool.
+
+**Conceptual Function Definition:**
+
+This function takes a complex problem or system description and an optional focus area, then formats them into a prompt designed to elicit a First Principles Thinking approach from an LLM.
+
+```python
+import re
+
+def first_principles_thinking(problem_or_system: str, focus_or_goal: str = None) -> str:
+  """
+  Transforms a problem/system description into a detailed prompt for applying 
+  First Principles Thinking using an LLM.
+
+  Args:
+    problem_or_system: The complex problem, system, or goal to be re-evaluated 
+                       from the ground up (e.g., "urban waste management for a 2M-person city",
+                       "the process of learning a new language", "designing a sustainable energy grid").
+    focus_or_goal: Optional. The key objective or constraint to guide the first principles 
+                   analysis (e.g., "efficiency", "speed of learning", "cost-effectiveness", 
+                   "environmental impact").
+
+  Returns:
+    A formatted prompt instructing an LLM to apply First Principles Thinking.
+  """
+
+  # 1. Clean and normalize the input problem/system
+  processed_problem = problem_or_system.strip()
+  # Remove leading action verbs if present
+  processed_problem = re.sub(r'^(Redesign|Reinvent|Analyze|Evaluate)\s+', '', processed_problem, flags=re.IGNORECASE)
+  # Capitalize the first letter 
+  processed_problem = processed_problem[0].upper() + processed_problem[1:]
+  
+  # 2. Construct the core request using First Principles
+  core_request = f"Apply First Principles Thinking to re-evaluate '{processed_problem}'."
+  
+  # 3. Identify fundamental truths instruction
+  fundamentals_instruction = "Break it down into its most fundamental truths and core requirements."
+
+  # 4. Add focus if provided
+  focus_clause = ""
+  if focus_or_goal and focus_or_goal.strip():
+      focus_clause = f" Pay particular attention to the fundamentals related to '{focus_or_goal.strip()}'."
+
+  # 5. Instruct to ignore assumptions and propose solutions
+  ignore_instruction = "Question all existing assumptions and ignore current methods or constraints."
+  propose_instruction = "Based *only* on these core principles, propose innovative and potentially radical solutions or approaches."
+
+  # 6. Assemble the final prompt
+  output_prompt = f"{core_request} {fundamentals_instruction}{focus_clause} {ignore_instruction} {propose_instruction}"
+  
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description":"Break down a complex problem or system into its fundamental truths and rebuild solutions from the ground up, ignoring existing assumptions.",
+  "name":"first_principles_thinking",
+  "parameters": {
+    "properties": {
+      "problem_or_system": {
+        "description": "The complex problem, system, or goal to be re-evaluated from the ground up (e.g., 'urban waste management for a 2M-person city', 'learning a new language').",
+        "type": "string"
+      },
+      "focus_or_goal": {
+        "description": "Optional. The key objective or constraint to guide the first principles analysis (e.g., 'efficiency', 'speed of learning', 'cost-effectiveness').",
+        "type": "string"
+      }
+    },
+    "required": ["problem_or_system"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    problem = "Redesign urban waste management for a 2M-person city"
+    focus = "efficiency"
+    output = first_principles_thinking(problem, focus)
+    print(output)
+    # Expected Output: Apply First Principles Thinking to re-evaluate 'Urban waste management for a 2M-person city'. Break it down into its most fundamental truths and core requirements. Pay particular attention to the fundamentals related to 'efficiency'. Question all existing assumptions and ignore current methods or constraints. Based *only* on these core principles, propose innovative and potentially radical solutions or approaches.
+    ```
+    *(Note: The phrasing is slightly adjusted for better flow and clarity but maintains the core instructions and intent of the original example.)*
+
+2.  **Without Specific Focus:**
+    ```python
+    problem = "The process of onboarding new software engineers"
+    output = first_principles_thinking(problem)
+    print(output)
+    # Expected Output: Apply First Principles Thinking to re-evaluate 'The process of onboarding new software engineers'. Break it down into its most fundamental truths and core requirements. Question all existing assumptions and ignore current methods or constraints. Based *only* on these core principles, propose innovative and potentially radical solutions or approaches.
+    ```
+
+3.  **Different Subject with Focus:**
+    ```python
+    problem = "Creating engaging online courses"
+    focus = "student retention"
+    output = first_principles_thinking(problem, focus)
+    print(output)
+    # Expected Output: Apply First Principles Thinking to re-evaluate 'Creating engaging online courses'. Break it down into its most fundamental truths and core requirements. Pay particular attention to the fundamentals related to 'student retention'. Question all existing assumptions and ignore current methods or constraints. Based *only* on these core principles, propose innovative and potentially radical solutions or approaches. 
+    ```

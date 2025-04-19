@@ -1,0 +1,129 @@
+Okay, here's the definition for the `force_field_analysis` tool.
+
+**Conceptual Function Definition:**
+
+This function takes a description of a change and optional examples of driving/restraining forces, then formats them into a detailed Force Field Analysis prompt for an LLM.
+
+```python
+import re
+
+def force_field_analysis(change_description: str, 
+                         example_driving_forces: str = None, 
+                         example_restraining_forces: str = None) -> str:
+  """
+  Transforms a description of a change into a detailed prompt for generating 
+  a Force Field Analysis using an LLM.
+
+  Args:
+    change_description: The change being considered or implemented 
+                        (e.g., "transitioning to a 4-day workweek", 
+                         "implementing a new CRM system",
+                         "merging two departments").
+    example_driving_forces: Optional. A string with example(s) of forces 
+                              pushing for the change (e.g., "employee morale", 
+                              "increased efficiency").
+    example_restraining_forces: Optional. A string with example(s) of forces 
+                                resisting the change (e.g., "client coverage", 
+                                "implementation costs", "resistance to change").
+
+  Returns:
+    A formatted prompt instructing an LLM to perform the Force Field Analysis.
+  """
+
+  # 1. Clean and normalize the input change description
+  processed_change = change_description.strip()
+  # Remove leading verbs/phrases if necessary (adjust regex as needed)
+  processed_change = re.sub(r'^(Analyze|Evaluate|Consider|Regarding)\s+', '', processed_change, flags=re.IGNORECASE)
+  # Capitalize the first letter and ensure it ends with a period.
+  processed_change = processed_change[0].upper() + processed_change[1:]
+  if not processed_change.endswith(('.', '?', '!')):
+      processed_change += '.'
+      
+  # 2. Construct the core request including driving forces
+  driving_clause = "driving forces"
+  if example_driving_forces and example_driving_forces.strip():
+      driving_clause += f" (e.g., {example_driving_forces.strip()})"
+  else:
+      # Optional: Add generic placeholder if desired when no example provided
+      # driving_clause += " (factors supporting the change)"
+      pass 
+
+  # 3. Construct the restraining forces part
+  restraining_clause = "restraining forces"
+  if example_restraining_forces and example_restraining_forces.strip():
+      restraining_clause += f" (e.g., {example_restraining_forces.strip()})"
+  else:
+      # Optional: Add generic placeholder if desired when no example provided
+      # restraining_clause += " (factors opposing the change)"
+      pass
+      
+  # 4. Add scoring and intervention request
+  scoring_request = "Score the relative strength of each force (e.g., on a scale of 1-5)."
+  intervention_request = "Propose interventions to strengthen driving forces and/or weaken restraining forces."
+
+  # 5. Assemble the final prompt
+  output_prompt = (
+      f"{processed_change} Perform a Force Field Analysis. "
+      f"List the {driving_clause} vs. the {restraining_clause}. "
+      f"{scoring_request} {intervention_request}"
+  )
+  
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description":"Identify driving (supporting) and restraining (opposing) forces related to a proposed change.",
+  "name":"force_field_analysis",
+  "parameters": {
+    "properties": {
+      "change_description": {
+        "description": "The change being considered or implemented (e.g., 'transitioning to a 4-day workweek', 'implementing a new CRM system').",
+        "type": "string"
+      },
+      "example_driving_forces": {
+        "description": "Optional. Example(s) of forces supporting the change (e.g., 'employee morale', 'potential cost savings').",
+        "type": "string"
+      },
+      "example_restraining_forces": {
+        "description": "Optional. Example(s) of forces resisting the change (e.g., 'client coverage', 'implementation cost').",
+        "type": "string"
+      }
+    },
+    "required": ["change_description"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example:**
+    ```python
+    change = "We're transitioning to a 4-day workweek"
+    driving = "employee morale"
+    restraining = "client coverage"
+    output = force_field_analysis(change, driving, restraining)
+    print(output)
+    # Expected Output: We're transitioning to a 4-day workweek. Perform a Force Field Analysis. List the driving forces (e.g., employee morale) vs. the restraining forces (e.g., client coverage). Score the relative strength of each force (e.g., on a scale of 1-5). Propose interventions to strengthen driving forces and/or weaken restraining forces.
+    ```
+
+2.  **Without Specific Examples:**
+    ```python
+    change = "Implementing a new company-wide recycling program"
+    output = force_field_analysis(change)
+    print(output)
+    # Expected Output: Implementing a new company-wide recycling program. Perform a Force Field Analysis. List the driving forces vs. the restraining forces. Score the relative strength of each force (e.g., on a scale of 1-5). Propose interventions to strengthen driving forces and/or weaken restraining forces.
+    ```
+
+3.  **With Only One Type of Example:**
+    ```python
+    change = "Upgrading our primary database software"
+    driving = "improved performance, better security features"
+    output = force_field_analysis(change, example_driving_forces=driving)
+    print(output)
+    # Expected Output: Upgrading our primary database software. Perform a Force Field Analysis. List the driving forces (e.g., improved performance, better security features) vs. the restraining forces. Score the relative strength of each force (e.g., on a scale of 1-5). Propose interventions to strengthen driving forces and/or weaken restraining forces.
+    ```

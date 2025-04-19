@@ -1,0 +1,103 @@
+Okay, here is the definition for the `hypothesis_testing` tool, following the established pattern.
+
+**Conceptual Function Definition:**
+
+This function takes a hypothesis statement and optionally a preferred test method, then formats them into a detailed prompt for designing a hypothesis test framework using an LLM.
+
+```python
+import re
+
+def hypothesis_testing(hypothesis: str, test_method: str = None) -> str:
+  """
+  Transforms a hypothesis statement into a detailed prompt for designing 
+  a hypothesis test framework using an LLM.
+
+  Args:
+    hypothesis: The core hypothesis or belief to be tested 
+                (e.g., "Adding a chatbot will reduce support tickets by 40%", 
+                 "Changing the button color will increase clicks").
+    test_method: Optional. The specific testing methodology preferred 
+                 (e.g., "A/B test", "Multivariate test", "Before-after analysis"). 
+                 If None, the prompt will ask the LLM to suggest one.
+
+  Returns:
+    A formatted prompt instructing an LLM to design the test framework.
+  """
+
+  # 1. Clean and normalize the hypothesis statement
+  processed_hypothesis = hypothesis.strip()
+  # Remove common introductory phrases (can be expanded)
+  processed_hypothesis = re.sub(r'^(Our hypothesis is that|We believe|The theory is|Test if|Validate that)\s+', '', processed_hypothesis, flags=re.IGNORECASE)
+  # Capitalize the first letter and ensure it ends with a period.
+  processed_hypothesis = processed_hypothesis[0].upper() + processed_hypothesis[1:]
+  if not processed_hypothesis.endswith(('.', '?', '!')):
+      processed_hypothesis += '.'
+      
+  # 2. Construct the core request to design a framework, incorporating the test method
+  if test_method and test_method.strip():
+      # Use the specified test method
+      design_clause = f"Design a(n) {test_method.strip()} test framework to validate this hypothesis."
+  else:
+      # Ask the LLM to suggest or determine the best method
+      design_clause = "Design a test framework to validate this hypothesis, suggesting an appropriate methodology (e.g., A/B test, pre/post analysis)." # Giving examples helps
+
+  # 3. Define standard required outputs for the framework (based on the example)
+  required_outputs = "Include key success metrics, data collection methods, and techniques to isolate variables and ensure statistical significance." # Tailored to example
+
+  # 4. Assemble the final prompt
+  output_prompt = f"{processed_hypothesis} {design_clause} {required_outputs}"
+  
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Validate assumptions with data-driven insights by designing a test framework.",
+  "name": "hypothesis_testing",
+  "parameters": {
+    "properties": {
+      "hypothesis": {
+        "description": "The core hypothesis or belief to be tested (e.g., 'Adding a chatbot will reduce support tickets by 40%').",
+        "type": "string"
+      },
+      "test_method": {
+        "description": "Optional. The specific testing methodology preferred (e.g., 'A/B test', 'Before-after analysis'). If omitted, the LLM will be asked to suggest one.",
+        "type": "string"
+      }
+    },
+    "required": ["hypothesis"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example (Implicit A/B Test):**
+    ```python
+    hypothesis_str = "Our SaaS team believes adding a chatbot will reduce support tickets by 40%"
+    # We can infer A/B test is suitable, or let the LLM suggest it. Let's specify it here to match the original prompt's structure closely.
+    output = hypothesis_testing(hypothesis_str, test_method="A/B") 
+    print(output)
+    # Expected Output: Our SaaS team believes adding a chatbot will reduce support tickets by 40%. Design an A/B test framework to validate this hypothesis. Include key success metrics, data collection methods, and techniques to isolate variables and ensure statistical significance.
+    ```
+    *(Note: The output structure closely matches the original example's intent, asking for the framework design and key components.)*
+
+2.  **Without Specifying Test Method:**
+    ```python
+    hypothesis_str = "Implementing a new onboarding tutorial improves user retention in the first week"
+    output = hypothesis_testing(hypothesis_str)
+    print(output)
+    # Expected Output: Implementing a new onboarding tutorial improves user retention in the first week. Design a test framework to validate this hypothesis, suggesting an appropriate methodology (e.g., A/B test, pre/post analysis). Include key success metrics, data collection methods, and techniques to isolate variables and ensure statistical significance.
+    ```
+
+3.  **Different Hypothesis and Method:**
+    ```python
+    hypothesis_str = "Validate that our recent marketing campaign increased brand awareness"
+    output = hypothesis_testing(hypothesis_str, test_method="Before-after survey analysis")
+    print(output)
+    # Expected Output: Our recent marketing campaign increased brand awareness. Design a Before-after survey analysis test framework to validate this hypothesis. Include key success metrics, data collection methods, and techniques to isolate variables and ensure statistical significance.
+    ```

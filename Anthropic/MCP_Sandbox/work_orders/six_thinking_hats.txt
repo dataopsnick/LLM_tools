@@ -1,0 +1,109 @@
+Okay, here is the definition for the `six_thinking_hats` tool.
+
+**Conceptual Function Definition:**
+
+This function takes a topic or problem statement and formats it into a detailed prompt for an LLM to perform an analysis using the Six Thinking Hats framework.
+
+```python
+import re
+
+def six_thinking_hats(topic_or_problem: str) -> str:
+    """
+    Transforms a topic or problem into a detailed prompt for generating 
+    an analysis using the Six Thinking Hats framework with an LLM.
+
+    Args:
+      topic_or_problem: The subject, decision, or issue to be analyzed 
+                        (e.g., "launching a subscription model for our software", 
+                         "improving team morale", "evaluating a new marketing campaign").
+
+    Returns:
+      A formatted prompt instructing an LLM to perform the Six Thinking Hats analysis.
+    """
+
+    # 1. Clean and normalize the input topic/problem
+    processed_topic = topic_or_problem.strip()
+    # Remove leading verbs often used when asking for analysis
+    processed_topic = re.sub(r'^(Analyze|Evaluate|Consider|Discuss|Explore)\s+', '', processed_topic, flags=re.IGNORECASE)
+    # Capitalize the first letter
+    processed_topic = processed_topic[0].upper() + processed_topic[1:]
+    # Ensure it doesn't end with punctuation that might clash
+    processed_topic = processed_topic.rstrip('.?!') 
+    
+    # 2. Define the structure of the request, including all six hats
+    #    Based on the example, but ensuring all hats are covered for generality.
+    hat_descriptions = (
+        "- White Hat (Facts & Data): Objective information available and needed.\n"
+        "- Red Hat (Feelings & Intuition): Emotions, gut reactions, hunches.\n"
+        "- Black Hat (Caution & Risks): Potential problems, difficulties, critical judgment.\n"
+        "- Yellow Hat (Benefits & Optimism): Positives, value, reasons for optimism.\n"
+        "- Green Hat (Creativity & Ideas): New ideas, alternatives, possibilities.\n"
+        "- Blue Hat (Process & Summary): Managing the thinking, overview, conclusions, next steps."
+    )
+    
+    # 3. Construct the output prompt using the template
+    output_prompt = (
+        f"Evaluate '{processed_topic}' using the Six Thinking Hats framework. Analyze it considering:\n"
+        f"{hat_descriptions}\n\n"
+        f"Summarize the insights gathered under each hat. Present the results in a structured format (e.g., a comparison table or a clearly sectioned list)."
+    )
+
+    return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Analyze problems or topics from multiple perspectives using the Six Thinking Hats method (White, Red, Black, Yellow, Green, Blue).",
+  "name": "six_thinking_hats",
+  "parameters": {
+    "properties": {
+      "topic_or_problem": {
+        "description": "The topic, decision, or problem to be analyzed (e.g., 'launching a subscription model', 'improving team communication', 'evaluating project proposal X').",
+        "type": "string"
+      }
+    },
+    "required": ["topic_or_problem"],
+    "type": "object"
+  }
+}
+
+```
+
+**Example Usage:**
+
+1.  **Matching the Original Example's Intent:**
+    ```python
+    topic = "launching a subscription model for our software"
+    output = six_thinking_hats(topic)
+    print(output)
+    # Expected Output: 
+    # Evaluate 'Launching a subscription model for our software' using the Six Thinking Hats framework. Analyze it considering:
+    # - White Hat (Facts & Data): Objective information available and needed.
+    # - Red Hat (Feelings & Intuition): Emotions, gut reactions, hunches.
+    # - Black Hat (Caution & Risks): Potential problems, difficulties, critical judgment.
+    # - Yellow Hat (Benefits & Optimism): Positives, value, reasons for optimism.
+    # - Green Hat (Creativity & Ideas): New ideas, alternatives, possibilities.
+    # - Blue Hat (Process & Summary): Managing the thinking, overview, conclusions, next steps.
+    #
+    # Summarize the insights gathered under each hat. Present the results in a structured format (e.g., a comparison table or a clearly sectioned list).
+    ```
+
+2.  **Different Topic:**
+    ```python
+    topic = "Analyze how we can reduce meeting times"
+    output = six_thinking_hats(topic)
+    print(output)
+    # Expected Output:
+    # Evaluate 'How we can reduce meeting times' using the Six Thinking Hats framework. Analyze it considering:
+    # - White Hat (Facts & Data): Objective information available and needed.
+    # - Red Hat (Feelings & Intuition): Emotions, gut reactions, hunches.
+    # - Black Hat (Caution & Risks): Potential problems, difficulties, critical judgment.
+    # - Yellow Hat (Benefits & Optimism): Positives, value, reasons for optimism.
+    # - Green Hat (Creativity & Ideas): New ideas, alternatives, possibilities.
+    # - Blue Hat (Process & Summary): Managing the thinking, overview, conclusions, next steps.
+    #
+    # Summarize the insights gathered under each hat. Present the results in a structured format (e.g., a comparison table or a clearly sectioned list).
+    ```

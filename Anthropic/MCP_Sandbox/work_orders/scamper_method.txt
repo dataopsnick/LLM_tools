@@ -1,0 +1,105 @@
+Okay, here is the definition for the `scamper_method` tool.
+
+**Conceptual Function Definition:**
+
+This function takes the subject to be modified and optionally the number of desired innovations, then formats a prompt for an LLM to apply the SCAMPER technique.
+
+```python
+import re
+
+def scamper_method(subject_to_modify: str, num_innovations: int = 5) -> str:
+  """
+  Transforms a subject into a detailed prompt for generating creative ideas 
+  using the SCAMPER method (Substitute, Combine, Adapt, Modify/Magnify/Minify, 
+  Put to another use, Eliminate, Reverse/Rearrange).
+
+  Args:
+    subject_to_modify: The product, service, process, or idea to apply 
+                       SCAMPER to (e.g., "a traditional library", 
+                       "our customer onboarding process", "a bicycle").
+    num_innovations: Optional. The desired number of distinct innovations 
+                     to generate (default is 5).
+
+  Returns:
+    A formatted prompt instructing an LLM to perform the SCAMPER analysis.
+  """
+
+  # 1. Clean and normalize the input subject
+  processed_subject = subject_to_modify.strip()
+  # Remove potential leading verbs if they are part of the subject description itself
+  # (Less critical here as the prompt dictates the action "Apply SCAMPER...")
+  processed_subject = re.sub(r'^(Redesign|Improve|Modify|Apply SCAMPER to)\s+', '', processed_subject, flags=re.IGNORECASE)
+  # Ensure it reads naturally as the object of the redesign
+  if processed_subject.startswith('a ') or processed_subject.startswith('an '):
+      pass # Keep the article
+  elif processed_subject.startswith('the '):
+       pass # Keep the article
+  # Optional: Add 'a' or 'an' if it seems like a general noun? - Decided against for simplicity.
+
+  # 2. Define the core instruction using the SCAMPER acronym elements
+  scamper_elements = "Substitute, Combine, Adapt, Modify (Magnify/Minify), Put to another use, Eliminate, and Reverse/Rearrange"
+  core_instruction = f"Apply the SCAMPER method to redesign or innovate on '{processed_subject}'."
+  explanation = f"Generate ideas by considering the following angles: {scamper_elements}."
+  
+  # 3. Define the output requirement
+  output_request = f"Propose {num_innovations} distinct and creative innovations based on this framework."
+  
+  # 4. Assemble the final prompt
+  # Combining the specific examples from the original prompt is less general.
+  # Instead, we instruct the LLM to apply the full framework.
+  output_prompt = f"{core_instruction} {explanation} {output_request}"
+  
+  return output_prompt
+
+```
+
+**JSON Definition (for LLM Tool Use):**
+
+```json
+{
+  "description": "Generates creative ideas for modifying a subject using the SCAMPER technique (Substitute, Combine, Adapt, Modify, Put to another use, Eliminate, Reverse).",
+  "name": "scamper_method",
+  "parameters": {
+    "properties": {
+      "subject_to_modify": {
+        "description": "The product, service, process, or idea to apply the SCAMPER method to (e.g., 'a traditional library', 'our onboarding process', 'a backpack').",
+        "type": "string"
+      },
+      "num_innovations": {
+        "description": "Optional. The desired number of distinct innovations to generate (default: 5).",
+        "type": "integer",
+        "default": 5 
+      }
+    },
+    "required": ["subject_to_modify"],
+    "type": "object"
+  }
+}
+```
+
+**Example Usage:**
+
+1.  **Matching the Intent of the Original Example:**
+    ```python
+    subject = "a traditional library"
+    output = scamper_method(subject, 5) 
+    print(output)
+    # Expected Output: Apply the SCAMPER method to redesign or innovate on 'a traditional library'. Generate ideas by considering the following angles: Substitute, Combine, Adapt, Modify (Magnify/Minify), Put to another use, Eliminate, and Reverse/Rearrange. Propose 5 distinct and creative innovations based on this framework.
+    ```
+    *(Note: This generated prompt is more structured and asks the LLM to do the creative work based on the SCAMPER elements, rather than priming it with specific examples like the original 'AR' and 'coworking'.)*
+
+2.  **Different Subject, Default Innovations:**
+    ```python
+    subject = "the weekly team meeting format"
+    output = scamper_method(subject) 
+    print(output)
+    # Expected Output: Apply the SCAMPER method to redesign or innovate on 'the weekly team meeting format'. Generate ideas by considering the following angles: Substitute, Combine, Adapt, Modify (Magnify/Minify), Put to another use, Eliminate, and Reverse/Rearrange. Propose 5 distinct and creative innovations based on this framework.
+    ```
+
+3.  **Different Subject, Specific Number:**
+    ```python
+    subject = "a standard umbrella"
+    output = scamper_method(subject, 3)
+    print(output)
+    # Expected Output: Apply the SCAMPER method to redesign or innovate on 'a standard umbrella'. Generate ideas by considering the following angles: Substitute, Combine, Adapt, Modify (Magnify/Minify), Put to another use, Eliminate, and Reverse/Rearrange. Propose 3 distinct and creative innovations based on this framework.
+    ```
